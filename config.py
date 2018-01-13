@@ -4,3 +4,5 @@ DEBUG = True
 
 # SECRET_KEY
 # SQLALCHEMY_DB
+
+SERVER_NAME = 'lmc.com:5000'

@@ -86,3 +86,14 @@
 使用url_for反转蓝图
     url_for('xxx.xxxxx')  # 使用'蓝图模块名.endpoint'(endpoint不指定时为方法名)，模板和视图函数的用法相同
     即使在同个蓝图中反转视图函数，也要指定蓝图的名字
+
+基于蓝图的子域名实现：
+    注:IP地址是不能有子域名的 abc.127.0.0.1:5000与abc.localhost:5000  是不对的
+        所以需要修改hosts文件  /etc/hosts
+    使用:
+        xxx_bp = Blueprint('名字', __name__, subdomain='abc')
+        主app文件中注册  app.register_blueprint(xxx_bp)
+        配置文件  SERVER_NAME = 'lmc.com:5000'
+        hosts 文件中做域名映射，主域名和子域名都要
+            127.0.0.1	lmc.com
+            127.0.0.1	abc.lmc.com
