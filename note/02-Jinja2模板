@@ -1,0 +1,117 @@
+templates文件夹指定路径：
+    app = Flask(__name__, template_folder='绝对路径')
+
+过滤器：
+    {{ value|abs }}绝对值
+    {{ value|default('xxxxx'[, true]) }}值不存在时用默认值代替，值为None时(空字典、空列表、空字符串)，默认显示为None
+                                当boolean为True时，值为None会替换成默认值，
+                                也可以这样写：{{ value or '默认值' }} value为None时显示默认值
+    {{ value|escape }}或{{ value|e }} 将<、>等符号转义成HTML中的符号(jinja有自动转义)
+        {% autoescape off  %}
+            此区域内的HTML字符不会自动转义，如果是JS、HTML代码会执行
+            {{ value|escape }}  此时HTML代码会转义
+        {% endautoescape %}
+    {{ value|safe }}  对value关闭自动转义，如果是JS、HTML代码会执行
+    {{ value|first }}  返回一个序列的第一个元素 {{ value[0] }}
+    {{ value|last }}    返回一个序列的最后一个元素
+    {{ "value %s" |format('xxx') }} 与Python中format的方法一样
+    {{ value|join('-') }}  将一个序列用参数的值拼接成字符串
+    {{ value|length }}  返回一个序列或字典的长度
+    {{ value|int }}  类型转换
+    {{ value|float }}  类型转换
+    {{ value|string }}  类型转换
+    {{ value|lower }}  大小写转换
+    {{ value|upper }}  大小写转换
+    {{ value|replace('aaa', 'vvvv') }}  把字符串value中的aaa替换成vvvv
+    {{ value|truncate(length=255,killwords=True) }}  截图指定长度的字符串
+    {{ value|striptags }}  删除字符串中所有的HTML标签，如果出现多个空格，会替换成一个空格
+    {{ value|trim }}  截取字符串前面和后面的空白字符
+    {{ value|wordcount }}  计算一个长字符串中单词的个数
+
+自定义过滤器:
+    @app.template_filter('my_filter')
+    def xxx(value):
+        value = value.center(20, '-')
+        return value
+    {{ xxx|my_filter }}
+
+if语句:
+    if--elif--else--endif
+    >,<,>=,<=,==,!=,and,or,not,
+
+for循环语句:
+    for...in...--else--endfor
+    for i in list
+    for k, v in dict.items()
+    loop.index  当前序列的索引，从1开始
+    loop.index0  当前序列的索引，从1开始
+    loop.first  是否是第一次循环
+    loop.last   是否时最后一次循环
+    loop.length   序列的长度
+
+宏(jinja2模板内的自定义函数,可以传递参数,但是不能有返回值):
+    可以将一些常用的代码片段放到宏中，然后把一些不固定的值抽取出来当成一个变量
+    1.定义：
+    {% macro input(name="",value="",type="text") %}
+        <input type="{{ type }}" name="{{ name }}" value="{{ value }}">
+    {% endmacro %}
+    2.使用：
+    {{ input("xxxx") }}
+    {{ input('aaaa', type='password')
+
+    导入宏(把宏代码放入到一个独立的html文件中)：
+    import...as...      from...import...    from...import...as...   (语法与Python一致)
+    1.导入：
+    {% from 'xxx.html' import input %}   -->  {{ input(a,b,c) }}
+    {% from 'xxx.html' import input as xxx %}   -->  {{ xxx(a,b,c) }}
+    {% import "xxx.html" as xxxx %}  --> {{ xxxx.xxx(a,b,c) }}
+    2.如果在导入宏的时候，就把当前模板中的一些参数传递给宏所在的模板，那么在导入的时候要使用with context
+    {% from 'xxx.html' import input as xxx with context %}
+    如当前模板有{{ username }}
+    如上导入后可以在宏模板中使用
+    {% macro input(name="",value="",type="text") %}
+        <input type="{{ type }}" name="{{ name }}" value="{{ username }}">
+    {% endmacro %}
+
+include标签(在其他html代码中引用部分布局[如页面的头部和脚部])：
+    创建好xxx.html,在xxx.html内写好部分html布局代码和css代码(<style>...</style>)
+    {% include 'xxx.html' %}    -->这句代码会变成xxx.html内的全部代码
+    如果模板可以直接使用引用模板的全部变量，不需要with context
+
+模板自定义变量
+    1.set关键字(全局变量)
+    {% set xxx='asdasd' %}
+    使用： {{ xxx }}
+    2.with关键字(局部变量)
+    {% with xxxx = 'qweqwe' %}
+        只有在此区域内才可以使用 {{ xxxx }}
+    {% endwith %}
+    或
+    {% with %}
+        {% set xxxx = 'qweqwe' %}
+        只有在此区域内才可以使用 {{ xxxx }}
+    {% endwith %}
+
+模板url_for加载静态文件:
+    <img src="{{ url_for('static',filename='images/girl.jpg') }}" style="height:10%; width: 10%" alt="hello">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+
+模板继承：
+    1.模板 base.html
+    <head></head><body>
+    ...
+    {% block xxx %} ... {% endblock %}
+    ...
+    </body>
+    2.继承(必须放在代码第一行)
+    {% extends "base.html" %}
+
+    {% block xxx %} ... {% end block%}
+    3.使用父block中的代码
+     {% block xxx %}
+         {{ super() }}
+         ...
+     {% end block%}
+    4.使用同一HTML其他block中的代码, 如block名aaa
+        {{ self.aaa() }}
+    5.使用继承后，代码必须放在block中，否则代码无效

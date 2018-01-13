@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+这是HTML，首页！
+<!--return render_template('index.html', **result_content)-->
+<p>{{ username }}</p>
+<p>{{ age }}</p>
+<p>{{ gender }}</p>
+<p>{{ c_time|handle_time }}</p>
+
+<p>{{ person.name|my_filter }}</p>
+<p>{{ person.age }}</p>
+<p>{{ websites.baidu }}</p>
+<p>{{ websites.google }}</p>
+<img src="{{ url_for('static',filename='images/girl.jpg') }}" style="height:10%; width: 10%" alt="hello">
+
+<!-- 第二种方式 -->
+<!--return render_template('index.html', result=result_content)-->
+{#    <p>{{ result.username }}</p>#}
+{#    <p>{{ result.age }}</p>#}
+{#    <p>{{ result.gender }}</p>#}
+{#    <p>{{ result.person.name }}</p>#}
+{#    <p>{{ result.person.age }}</p>#}
+
+</body>
+</html>

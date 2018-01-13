@@ -1,0 +1,73 @@
+高级视图：
+    def my_list1():
+        return 'my_list1'
+    app.add_url_rule('/list1/', endpoint='list111', view_func=my_list1)
+    # endpoint 用于url_for寻找path
+    # add_url_rule方法未指定endpoint时 url_for('my_list1') 与 指定了endpoint后 url_for('list111') 得到的path相同
+    # add_url_rule方法未指定endpoint时,默认等于方法名
+
+    @app.route('/', endpoint='...')  同理,其底层就是使用了add_url_rule
+
+类视图
+    标准类视图：
+    1.必须继承自‘flask.views.View’
+    2.必须实现'dispatch_request'方法，以后请求过来后，都会执行这个方法。
+        这个方法的返回值就相当于时之前的函数视图一样。也必须返回Response、字符串、元祖或子类的对象，
+    3.必须通过app.add_url_rule('/path/', endpoint='asdsad', view_func=自定义类.as_view('xxx'))
+        如果未指定endpoint,则endpoint等于as_view内的‘xxx’
+    4.优点：可以继承，把一些共性的东西抽取出来，子视图直接用即可，如：
+    当有几个url需要返回json数据时
+    class JSONView(views.View):
+        def get_data(self):
+            raise NotImplementedError
+        def dispatch_request(self):
+            return jsonify(self.get_data())
+    子类继承后直接实现get_data方法，返回数据(如字典、列表)即可变为json数据
+    或当多个视图渲染需要返回相同的变量时
+    class ContextView(views.View):
+        def __init__(self):
+            super(ContextView, self).__init__()
+            self.context = {
+                'xxx': 'xxxxxxx'
+            }
+    子类继承后渲染模板时就可以直接返回 **self.context
+    需要追加数据可以 self.context.update({'zzz': 'zzzzz'})
+
+    基于请求方法的类视图：
+    class LoginView(views.MethodView):
+        def get(self):
+            return ...
+
+        def post(self):
+            ... = request.form.get('...')
+            return ...
+    app.add_url_rule('/login/', view_func=LoginView.as_view('login'))
+
+    使用装饰器
+    from functools import wraps
+    def login_require(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            username = request.args.get('username')
+            if username and username == 'xxx':
+                return func(*args, **kwargs)
+            else:
+                return '请先登录'
+        return wrapper
+    # 视图方法使用装饰器(要写在app.route下面)
+    @app.route('/settings/', endpoint='setting')
+    @login_require
+    def settings():
+        return '这是设置页面'
+    # 类视图使用装饰器(重写类属性decorators, 元祖或者列表都可以)
+    class SettingsView(views.View):
+        decorators = [login_require]
+        def dispatch_request(self):
+            return '这是设置界面'
+    app.add_url_rule('/setting/', view_func=SettingsView.as_view('setting'))
+
+蓝图：使Flask项目更加模块化，可以将相同模块的视图函数放在同一个蓝图下，同一个文件中，方便管理(一般建立文件夹管理全部蓝图)
+    1.在蓝图文件导入Blueprint  'from flask import Blueprint' --> 'xxx_bp = Blueprint('名字', __name__)'
+    2.主App文件中注册蓝图  'from blueprints.xxx import xxx_bp' --> 'app.register_blueprint(xxx_bp)'
+    3.各模块同一url前缀的方法：'xxx_bp = Blueprint('名字', __name__,url_prefix='/xxx')'
+        # '/xxx'后一般不接'/',通常在蓝图下的路由xxx_bp.route('/xxx/')的路径前加'/'
