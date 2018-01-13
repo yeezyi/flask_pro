@@ -71,3 +71,18 @@
     2.主App文件中注册蓝图  'from blueprints.xxx import xxx_bp' --> 'app.register_blueprint(xxx_bp)'
     3.各模块同一url前缀的方法：'xxx_bp = Blueprint('名字', __name__,url_prefix='/xxx')'
         # '/xxx'后一般不接'/',通常在蓝图下的路由xxx_bp.route('/xxx/')的路径前加'/'
+
+蓝图寻找模板的路径
+    xxx=Blueprint()时如果指定了temp_folder,则会在蓝图的同级目录下寻找文件夹下的模板
+    如果未指定，则前往template文件夹下寻找，
+    如果temp_folder和template文件夹存在同名模板，无论是否指定temp_folder,优先选择template文件夹下的模板
+
+蓝图寻找静态文件的路径
+    在模板文件中，加载静态文件，如果使用url_for('static'),那么就只会在app指定的静态文件夹目录下查找静态文件
+    如果在加载静态文件的时候，指定蓝图的名字，如url_for('bp1.static'),xxx=Blueprint()时如果指定了static_folder，那么就会到这个蓝图指定的static_folder下查找静态文件文件
+    如果未指定，则前往static文件夹下寻找，
+    如果static_folder和static文件夹存在同名模板，无论是否指定static_folder,优先选择static文件夹下的模板
+
+使用url_for反转蓝图
+    url_for('xxx.xxxxx')  # 使用'蓝图模块名.endpoint'(endpoint不指定时为方法名)，模板和视图函数的用法相同
+    即使在同个蓝图中反转视图函数，也要指定蓝图的名字
