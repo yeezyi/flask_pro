@@ -1,0 +1,93 @@
+将ORM模型映射到数据库
+    1.用'declarative_base'根据'engine'创建一个基类
+        from sqlalchemy.ext.declarative import declarative_base
+        engine = create_engine(DB_URI)
+        Base = declarative_base(engine)
+    2.用这个'Base'类作为基类来创建ORM类
+        要定义'__tablename__'类属性,来指定这个模型映射到数据库中的表名
+        创建属性来映射到表中的字段,属性的类型必须是Column类型
+        class Person(Base):
+            __tablename__ = 'person'
+            id = Column(INTEGER, primary_key=True, autoincrement=True)
+            name = Column(String(50))
+            age = Column(INTEGER)
+    3.使用'Base.metadata.create_all()',将创建好的ORM模型，映射到数据库中
+    4.一旦使用'Base.metadata.create_all()'创建好数据库表后,
+        即使改变ORM类中的字段(增加减少列),也不会重新映射
+
+用session做数据的增删改查：
+    ps：此session非网站的session
+    1.创建session对象
+        from sqlalchemy.orm import sessionmaker
+        session = sessionmaker(engine)()
+    2.增：
+        # 单条数据
+        def create_data():
+            p = Person(name='aabbcc', age=10)
+            session.add(p)  # 此时还没提交到数据库
+            session.commit()
+        # 多条数据
+        def create_data():
+            p1 = Person(name='aabbccdd', age=11)
+            p2 = Person(name='aabbccddee', age=12)
+            session.add_all([p1, p2])  # 此时还没提交到数据库
+            session.commit()
+    3.删：
+        def delete_data():
+            # 删除前需要获得这个对象
+            person = session.query(Person).first()
+            session.delete(person)
+            session.commit()
+    4.改：
+        def update_data():
+            # 修改前需要获得这个对象
+            person = session.query(Person).first()
+            # 直接修改属性即可
+            person.name = 'aa'
+            # 修改之后提交
+            session.commit()
+    5.查：
+        ps:重写模型的__str__方法可以改变print的返回值
+        def select_data():
+            # 查找某个模型的所有数据
+            select_person = session.query(Person).all()
+            # 根据条件查找  使用filter_by(筛选条件)
+            select_person = session.query(Person).filter_by(age=11).all()
+            # 或 使用filter(条件查询)  如>=, <=
+            select_person = session.query(Person).filter(Person.age==11).all()
+            for p in select_person:
+                print(p)
+            # 根据主键ID获取,只会返回一条数据或者None
+            person = session.query(Person).get(1)
+            print(person)
+            # 使用first方法获取结果集中的第一条数据
+            person = session.query(Person).first()
+            print(person)
+
+sqlalchemy常用数据类型
+    Integer,INT : 整形
+    Float ： 浮点类型,映射到数据库中是32位,过长会丢失精度
+    Boolean ：　传递True/False进去
+    DECIMAL ： 定点类型,是专门为了解决浮点类型精度丢失的问题,存储钱相关的字段的时候建议大家都使用这个数据类型
+            如:prices = Column(DECIMAL(10, 4)) #10表示一共有10位,小数占4位,存储位数超过时会报错
+    enum ： 枚举类型  tag = Column(Enum("tag1", "tag2", "tag3"))
+            或:
+                import enum
+                class TagEnum(enum.Enum):
+                    tag1 = "tag1"
+                    tag2 = "tag2"
+                    tag3 = "tag3"
+                tag = Column(Enum(TagEnum))
+            存储时:
+                article = Article(tag=TagEnum.tag1)或article = Article(tag="tag1")
+    Date ： 传递 datetime.date()进去
+            存储时:
+                from datetime import date
+                article = Article(create_time=date(year=2018, month=1, day=10))
+                或 article = Article(create_time=date(2018, 1, 10))
+    Datetime ： 传递 datetime.datetime()进去
+    Time ： 传递 datetime.time()进去
+    String ： 字符类型，使用时需要指定长度
+    Text ： 文本类型
+    LONGTEXT ： 长文本类型(只有Mysql有LONGTEXT类型,需要从其他包中导入)
+                from sqlalchemy.dialects.mysql import LONGTEXT
