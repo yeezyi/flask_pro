@@ -91,3 +91,33 @@ sqlalchemy常用数据类型
     Text ： 文本类型
     LONGTEXT ： 长文本类型(只有Mysql有LONGTEXT类型,需要从其他包中导入)
                 from sqlalchemy.dialects.mysql import LONGTEXT
+
+Column常用参数
+    primary_key     主键
+    autoincrement   自增
+    default         默认值, 可以指定函数
+                    如:可以使用create_time = Column(DATETIME, default=datetime.now)为数据添加创建时间
+    nullable        是否可为空,默认为True可以为空
+    unique          是否唯一
+    onupdate        在数据更新的时候会调用这个参数指定的值或方法,第一次创建数据时不会用onupdate的值,只会用default的值
+                    如:update_time = Column(DATETIME, onupdate=datetime.now) 修改数据时会自动更新时间
+                    优化:update_time = Column(DATETIME, onupdate=datetime.now, default=datetime.now)
+    name            该属性在数据库中的字段映射,即每一列的名字,不设置默认为变量名
+                    这个参数也可以作为位置参数,在第1个参数来指定
+                    如:   title = Column(String(50), name='my_title')
+                    等同于:title = Column('my_title',String(50))
+
+query可用参数
+    1.模型对象.指定查找这个模型中所有的对象
+        result = session.query(Article).all()
+    2.模型中的属性.可以指定只查找某个模型的其中几个属性.
+        result = session.query(Article.id, Article.title).all()
+        返回一个列表,列表中的每一个元素为模型中的属性组成的元祖
+    3.聚合函数
+        func.count : 统计行的数量
+            from sqlalchemy import func
+            result = session.query(func.count(Article.id)).first()
+        func.avg : 求平均值
+        func.max : 求最大值
+        func.min : 求最小值
+        func.sum : 求和
