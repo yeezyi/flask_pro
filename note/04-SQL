@@ -121,3 +121,21 @@ query可用参数
         func.max : 求最大值
         func.min : 求最小值
         func.sum : 求和
+
+filter常用过滤条件(不加.all()或.first()可以得到原生SQL语句)
+    1.equals : session.query(Article).filter(Article.id == 1)
+    2.not equals : session.query(Article).filter(Article.id != 1)
+    3.like : session.query(Article).filter(Article.title.like('title%'))  # %为通配符
+             session.query(Article).filter(Article.title.ilike('title%'))  # ilike 不区分大小写
+    4.in : session.query(Article).filter(Article.title.in_(['title1', 'title2']))
+           # 也可作用于一个Query结果集
+           session.query(Article).filter(Article.title.in_(session.query(Article.title).filter(Article.title.like('title%'))))
+    5.not in : session.query(Article).filter(~Article.title.in_(['title1', 'title2']))
+               session.query(Article).filter(Article.title.notin_(['title1', 'title2']))
+    6.is null : session.query(Article).filter(Article.title == None)
+    7.is not null : session.query(Article).filter(Article.title != None)
+    8.and : session.query(Article).filter(Article.title == 'title0', Article.id == 0)  # 用位置参数替代
+      或者 : from sqlalchemy import and_
+            result = session.query(Article).filter(and_(Article.title == 'title0', Article.id == 1)).all()
+    9.or : from sqlalchemy import or_
+           result = session.query(Article).filter(or_(Article.title == 'title0', Article.id == 2)).all()
