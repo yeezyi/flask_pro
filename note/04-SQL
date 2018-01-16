@@ -139,3 +139,70 @@ filter常用过滤条件(不加.all()或.first()可以得到原生SQL语句)
             result = session.query(Article).filter(and_(Article.title == 'title0', Article.id == 1)).all()
     9.or : from sqlalchemy import or_
            result = session.query(Article).filter(or_(Article.title == 'title0', Article.id == 2)).all()
+
+外键及其4种约束(show create table xxx\G 可以查看创建表的语句)
+    ps:ENGINE=InnoDB 是外键支持所需要的,不设置则不支持外键的4种约束
+    创建外键:
+        from sqlalchemy import ForeignKey
+        # 在从表中添加一个字段,指定这个字段外键是哪个表的哪个字段就可以了,必须和父表的主键字段类型一致
+        # 主表(user):
+            id = Column(INTEGER, primary_key=True, autoincrement=True)
+        # 从表(article):
+            uid = Column(INTEGER, ForeignKey("user.id"))
+    外键约束(删除主表主键时从表所采取的措施),默认外键约束为RESTRICT
+        1.RESTRICT:父表数据被删除,会阻止此次操作
+        2.NO ACTION:在MySQL中, 同RESRTICT
+        3.CASCADE:级联删除,主表删除后,子表所引用的数据也会被删除
+        4.SET NULL:父表数据被删除,子表数据设为NULL,与nullable=False冲突
+        使用:
+            uid = Column(INTEGER, ForeignKey("user.id", ondelete="RESTRICT"))
+
+ORM外键查找
+    1.通过从表找主表:
+        from sqlalchemy.orm import relationship
+        在从表添加:
+            xxuserxx = relationship('User')
+        之后可以通过以下得到外键对象:
+            article = session.query(Article).first()
+            print(article.xxuserxx.username)
+    2.通过主表找从表(一对多):
+        from sqlalchemy.orm import relationship
+        在主表添加:
+            xxarticlexx = relationship('Article')
+        之后可以通过以下得到从表对象:
+            user = session.query(User).first()
+            print(user.xxarticlexx.)
+
+    3.在从表(添加backref参数)即可实现双向查找
+        user = relationship('User', backref="xxarticlesxx")
+        backref参数就是在主表类中添加了一个"xxarticlesxx"变量指向从表
+
+外键一对多增加数据:
+    # 从表为主的存储
+        # user = User(username='xxxx')
+        user = session.query(User).first()
+        article1 = Article(title='asd65', price=122)
+        article1.user = user
+
+        session.add(article1)
+        session.commit()
+    # 主表为主存储
+        user = User(username='xxx')
+        article1 = Article(title='zxc232', price=45)
+        article2 = Article(title='wer3', price=68)
+        user.xxarticlesxx.append(article1)
+        user.xxarticlesxx.append(article2)
+
+        session.add(user)
+        session.commit()
+
+外键一对一(uselist参数)
+    1.
+    # 从表:
+        user = relationship("User")
+    # 主表:
+        # uselist参数为False时关闭一对多,即形成一对一
+        extend = relationship('UserExtend', uselist=False)
+    2. 双向指引
+        from sqlalchemy.orm import backref
+        user = relationship("User", backref=backref("extend", uselist=False))
