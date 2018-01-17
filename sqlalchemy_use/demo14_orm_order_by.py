@@ -24,49 +24,59 @@ Base = declarative_base(engine)
 # 对数据的增删改查都需要这个对象
 session = sessionmaker(engine)()
 
+from datetime import datetime
 from sqlalchemy import ForeignKey
-
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 
 class User(Base):
     __tablename__ = 'user'
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     username = Column(String(50), nullable=False)
-    # extend = relationship('UserExtend', uselist=False)
 
-    def __repr__(self):
-        return "%s, %s" % (self.id, self.username)
+
+
+
 class Article(Base):
     __tablename__ = "article"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     title = Column(String(50), nullable=False)
-    price = Column(Float, nullable=False)
-    uid = Column(INTEGER, ForeignKey("user.id", ondelete="RESTRICT"))
-    user = relationship('User', backref="xxarticlesxx")
+    create_time = Column(DATETIME, nullable=False, default=datetime.now)
+    uid = Column(INTEGER, ForeignKey('user.id'))
+    author = relationship('User', backref=backref("articles", order_by=create_time.desc()))
 
     def __str__(self):
-        return '%s : %s :%s' % (self.id, self.title, self.price)
+        return '%s' % self.title
 
     # print结果集的时候会执行这个方法
     def __repr__(self):
-        return '%s : %s' % (self.title, self.price)
+        return '%s : %s' % (self.title, self.create_time)
 
-from sqlalchemy.orm import backref
-class UserExtend(Base):
-    __tablename__ = 'user_extend'
-    id = Column(INTEGER, primary_key=True, autoincrement=True)
-    school = Column(String(50))
-    uid = Column(INTEGER, ForeignKey('user.id'), nullable=False)
-    # user = relationship("User")
-    user = relationship("User", backref=backref("extend", uselist=False))
+        # __mapper_args__ = {
+        #     'order_by': -create_time
+        # }
 
-# Base.metadata.drop_all()
-# Base.metadata.create_all()
 
-user = User(username='ccczxczxc123aaa')
-# user = session.query(User).first()
-extend1 = UserExtend(school='1asdasd1111')
-user.extend = extend1
-session.add(user)
-session.commit()
+def my_init_db():
+    # Base.metadata.drop_all()
+    # Base.metadata.create_all()
+    # user = User(username="1111")
+    user = session.query(User).first()
+    # article1 = Article(title='qqqqqq')
+    article2 = Article(title='xxx')
+    user.articles.extend([article2])
+    # session.add(user)
+    session.commit()
+
+
+def operation():
+    # article = session.query(Article).order_by(-Article.create_time).all()
+    # article = session.query(Article).order_by(Article.create_time.desc()).all()
+    # article = session.query(Article).all()
+    user = session.query(User).first()
+    print(user.articles)
+
+
+if __name__ == '__main__':
+    # my_init_db()
+    operation()

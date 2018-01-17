@@ -28,45 +28,40 @@ from sqlalchemy import ForeignKey
 
 from sqlalchemy.orm import relationship
 
-
 class User(Base):
     __tablename__ = 'user'
     id = Column(INTEGER, primary_key=True, autoincrement=True)
-    username = Column(String(50), nullable=False)
-    # extend = relationship('UserExtend', uselist=False)
+    username = Column(String(50))
 
-    def __repr__(self):
-        return "%s, %s" % (self.id, self.username)
+
 class Article(Base):
     __tablename__ = "article"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     title = Column(String(50), nullable=False)
-    price = Column(Float, nullable=False)
-    uid = Column(INTEGER, ForeignKey("user.id", ondelete="RESTRICT"))
-    user = relationship('User', backref="xxarticlesxx")
+    # 添加外键约束RESTRICT后在SQL层面是无法删除父表外键的,但是在ORM代码中是可以删除的
+    # 删除后字表的外键值会设为NULL
+    # 想避免这种情况,需要在字表的外键处添加nullable=False
+    uid = Column(INTEGER, ForeignKey('user.id'), nullable=False)
+    author = relationship('User', backref='articles')
 
     def __str__(self):
-        return '%s : %s :%s' % (self.id, self.title, self.price)
+        return '%s' % self.title
 
     # print结果集的时候会执行这个方法
     def __repr__(self):
-        return '%s : %s' % (self.title, self.price)
+        return '%s : %s' % (self.title, self.id)
 
-from sqlalchemy.orm import backref
-class UserExtend(Base):
-    __tablename__ = 'user_extend'
-    id = Column(INTEGER, primary_key=True, autoincrement=True)
-    school = Column(String(50))
-    uid = Column(INTEGER, ForeignKey('user.id'), nullable=False)
-    # user = relationship("User")
-    user = relationship("User", backref=backref("extend", uselist=False))
-
+#
 # Base.metadata.drop_all()
 # Base.metadata.create_all()
+#
+# user = User(username='lmc')
+# article = Article(title='lllllllll')
+# article.author = user
+# session.add(article)
+# session.commit()
 
-user = User(username='ccczxczxc123aaa')
-# user = session.query(User).first()
-extend1 = UserExtend(school='1asdasd1111')
-user.extend = extend1
-session.add(user)
+user = session.query(User).first()
+session.delete(user)
 session.commit()
+

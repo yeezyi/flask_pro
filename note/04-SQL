@@ -206,3 +206,47 @@ ORM外键查找
     2. 双向指引
         from sqlalchemy.orm import backref
         user = relationship("User", backref=backref("extend", uselist=False))
+
+多对多:
+    创建:
+        1.先把两个需要做多对多的模型定义出来
+            class Article(Base):
+                __tablename__ = "article"
+                id = ...
+                title = ...
+            class Tag(Base):
+                __tablename__ = "tag"
+                id = ...
+                tag = ...
+        2.使用Table定义一个中间表,中间表一般就是包含两个模型的外键字段就可以了,并且让这两个来作为一个复合主键
+            from sqlalchemy import Table
+            # 第一个参数:表的名字
+            # 第三个参数:有哪些列
+            # article_id 和 tag_id 组成主键联合唯一
+            article_tag = Table("article_tag", Base.metadata,
+                        Column("article_id", INTEGER, ForeignKey('article.id'), primary_key=True),
+                        Column("tag_id", INTEGER, ForeignKey('tag.id'), primary_key=True))
+        3.在两个模型选取一个定义一个relationship
+            from sqlalchemy.orm import relationship
+            tags = relationship("Tag", backref='articles', secondary=article_tag)
+    操作:
+        1.存储
+            article1 = Article(title="111111")
+            article2 = Article(title="222222")
+            tag1 = Tag(name='aaaaaa')
+            tag2 = Tag(name='bbbbbb')
+
+            article1.tags.append(tag1)
+            article1.tags.append(tag2)
+            article2.tags.append(tag1)
+            article2.tags.append(tag2)
+
+
+            session.add_all([article1, article2])
+            session.commit()
+        2.查找
+            article = session.query(Article).first()
+            print(article.tags)
+
+            tag = session.query(Tag).first()
+            print(tag.articles)

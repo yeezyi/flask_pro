@@ -1,0 +1,47 @@
+ORM层面删除注意事项:
+    添加外键约束RESTRICT后在SQL层面是无法删除父表外键的,但是在ORM代码中是可以删除的
+    删除后字表的外键值会设为NULL
+    想避免这种情况,需要在字表的外键处添加nullable=False
+    uid = Column(INTEGER, ForeignKey('user.id'), nullable=False)
+
+ORM层面的CASCADE:
+    在SQLAlchemy中,只要将一个数据添加到session中,和他关联的数据都可以一起存入到数据库
+    这是都是通过relationship设置的,有一个关键字参数cascade可以设置这些属性:
+    1.save-update(默认):在添加一条数据的时候,会把其他和他相关的数据都添加到数据库中
+    2.delete: 表示当删除某一个模型中的数据的时候,是否也删掉使用relationship和他关联的数据
+    3.delete-orphan(只能在父表的relationship中使用): 表示当对一个ORM对象解除了父表中的关联对象的时候(为NULL),自己便会被删除掉,
+        当然如果父表中的数据被删除,自己也会被删除.这个选项只能用在一对多上,不能用在多对多已经多对一上.
+        并且还需要在子模型的relationship中,增加一个single_parent=True的参数
+    4.merge(默认) :当在使用session.merge,合并一个对象的时候,
+                    会将使用了relationship相关联的对象也进行merge操作
+    5.expunge : 移除操作的时候,会将相关联的对象也进行移除.这个操作只是从session中移除,并不会真正的从数据库中移除
+    6.all: 是对save-update, merge, refresh-expire, expunge, delete几种的缩写
+
+    author = relationship('User', backref='articles', cascade='save-update,delete')  # 多选以英文逗号隔开
+    author = relationship('User', backref=backref('articles',cascade='save-update,delete'), cascade='save-update,delete')
+    cascade 只会影响到当前的relationship, 不会影响当前模型的其他relationship
+    backref=backref(...) 的backref函数就相当于在另一个模型定义relationship,函数的参数与relationship的参数一模一样
+
+排序:
+    1.order_by: 可以指定根据这个表中的某个字段进行排序,如果前面加了一个'-',代表的是降序排序
+        article = session.query(Article).order_by(-Article.create_time).all()  # 等同于下式
+        article = session.query(Article).order_by(Article.create_time.desc()).all()
+    2.在模型定义的时候指定默认排序: 有些时候,不想每次在查询的时候都指定排序的方式,可以在定义模型的时候就指定排序方式
+        有以下两种方式:
+            a.在relationship的order_by参数:在指定relationship的时候,传递order_by参数来指定排序的字段
+                author = relationship('User', backref=backref("articles", order_by=create_time.desc()))
+            b.在定义的模型中,添加__mapper_args__属性
+                __mapper_args__ = {
+                    "order_by": title  # 使用标题排序
+                }
+    3.默认使用正序排序,如果要使用倒序排序可以使用这个字段的'desc()'方法或者在排序的时候在字段前加'-'
+
+limit, offset, 切片:
+    1.limit:可以限制每次查询的时候只查询几条数据
+        articles = session.query(Article).limit(10).all()  # 0~9
+        articles = session.query(Article).order_by(Article.id.desc()).limit(10).all()  # 99~90
+    2.offset: 可以限制查找数据的时候过滤掉前面多少条
+        articles = session.query(Article).offset(10).limit(10).all()  # 10~19
+    3.切片slice(start, stop)或[start: stop+1]: 可以对Query对象使用切片操作,来获取想要的数据
+        articles = session.query(Article).order_by(Article.id.desc()).slice(10, 19).all()  # 89~80
+        articles = session.query(Article).order_by(Article.id.desc())[10:20]  # 89~80
