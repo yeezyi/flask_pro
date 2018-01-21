@@ -45,3 +45,17 @@ limit, offset, 切片:
     3.切片slice(start, stop)或[start: stop+1]: 可以对Query对象使用切片操作,来获取想要的数据
         articles = session.query(Article).order_by(Article.id.desc()).slice(10, 19).all()  # 89~80
         articles = session.query(Article).order_by(Article.id.desc())[10:20]  # 89~80
+
+懒加载:
+    给relationship传递一个 lazy='dynamic' ,以后通过对象.relationship对象 得到的就不是一个列表,而是一个AppenderQuery对象.
+    这样就可以对这个对象再进行一层filter_by,order_by,limit()等操作
+        author = relationship('User', backref=backref("articles", lazy='dynamic'))
+    AppenderQuery还有Append等列表功能,如:
+        article = Article(title='title 100')
+        user.articles.append(article)
+    lazy可用选项:
+        --select(默认):如果你没有访问user.articles这个属性,那么SQLAlchemy就不会从数据库查找文章.
+                一旦你访问了这个属性,那么SQLAlchemy就会立马从数据库中查找所有文章,并把查找出来的数据组装成一个列表
+        --dynamic: 动态加载,访问user.articles这个属性时返回的不是列表,而是一个 AppenderQuery对象
+        --immediate: 当你得到user对象时,无论你有没有访问user.article这个属性,SQLAlchemy都会把所有文章从数据库中拿出来
+                易造成性能浪费
