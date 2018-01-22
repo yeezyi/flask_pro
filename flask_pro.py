@@ -5,7 +5,6 @@ from blueprints.bp1 import bp_1
 from blueprints.bp2 import bp_2
 from blueprints.bp3 import bp_3
 
-
 # from flask_sqlalchemy import SQLAlchemy
 
 # 初始化Flask对象
@@ -21,6 +20,7 @@ app.config.from_object(config)
 app.register_blueprint(bp_1)
 app.register_blueprint(bp_2)
 app.register_blueprint(bp_3)
+
 
 # 初始化SQLAlchemy
 # db = SQLAlchemy(app)
@@ -118,7 +118,10 @@ def my_list1():
     print(url_for('login'))
     return 'my_list1'
 
+
 from functools import wraps
+
+
 def login_require(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -127,20 +130,24 @@ def login_require(func):
             return func(*args, **kwargs)
         else:
             return '请先登录'
+
     return wrapper
+
 
 @app.route('/settings/', endpoint='settings')
 @login_require
 def settings():
     return '这是设置页面'
 
+
 class SettingsView(views.View):
     decorators = [login_require]
+
     def dispatch_request(self):
         return '这是设置界面'
+
+
 app.add_url_rule('/setting/', view_func=SettingsView.as_view('setting'))
-
-
 
 app.add_url_rule('/list1/', endpoint='list111', view_func=my_list1)
 

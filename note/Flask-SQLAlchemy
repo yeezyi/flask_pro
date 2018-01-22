@@ -1,0 +1,70 @@
+Flask-SQLAlchemy
+
+安装:
+    pip3 install Flask-SQLAlchemy
+
+数据库连接:
+    1.在配置文件config.py中:
+        HOST = '127.0.0.1'
+        PORT = 3306
+        DATABASE = 't4'
+        USERNAME = 'root'
+        PASSWORD = '124578'
+
+        DB_URI = "mysql+pymysql://{username}:{password}@{host}:{port}/{db}" \
+                 "?charset=utf8".format(username=USERNAME,
+                                        password=PASSWORD, host=HOST,
+                                        port=PORT, db=DATABASE)
+
+        # SQLALCHEMY_DATABASE_URI是固定变量名,名字不可变
+        SQLALCHEMY_DATABASE_URI = DB_URI
+    ~或者在视图文件中也可以: app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+    2.绑定APP
+        from flask_sqlalchemy import SQLAlchemy
+        db = SQLAlchemy(app)
+
+创建ORM模型:
+    class User(db.Model):
+        # db.Model封装了__tablename__, 如果不写tablename, 默认使用模型类的名字小写, 建议写__tablename__属性
+        # 如果为驼峰命名类,则除了第一个大写字母,后面的大写字母变为小写后前面会加_,如UserModel -> user_model
+        __tablename__ = "user"
+        id = db.Column(db.INTEGER, primary_key=True, autoincrement=True)
+        username = db.Column(db.String(50), nullable=False)
+        def __repr__(self):
+            return "<User(username : %s )>" % self.username
+
+    class Article(db.Model):
+        __tablename__ = 'article'
+        id = db.Column(db.INTEGER, primary_key=True, autoincrement=True)
+        title = db.Column(db.String(50), nullable=False)
+        uid = db.Column(db.INTEGER, db.ForeignKey('user.id'))
+
+        author = db.relationship('User', backref=db.backref('articles'))
+
+        def __repr__(self):
+            return "<Article(title : %s )>" % self.title
+    # 映射到数据库
+    # db.drop_all()
+    # db.create_all()
+
+ORM操作(不再需要从SQLAlchemy导入Integer,String等模块,直接使用db.Integer,db.String):
+    (也不再需要sessionmaker创建session, 使用db.session即可)
+    # 增
+    # user = User(username='2aa222')
+    # article = Article(title='bbqqssqq')
+    # article.author = user
+    # db.session.add(user)
+    # db.session.commit()
+    # 查 order_by,filter,filter_by,group_by,having,join
+    # users = User.query.all()
+    # users = User.query.order_by(User.id.desc()).all()
+    # print(users)
+    # 上面是单表查询的简便写法,多表查询还是要db.session.query
+    # 改
+    # user = User.query.first()
+    # user.username = 'asdasd'
+    # db.session.commit()
+    # 删
+    # user = User.query.first()
+    # db.session.delete(user)
+    # db.session.commit()
