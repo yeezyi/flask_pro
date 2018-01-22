@@ -1,7 +1,7 @@
 # demo与flask无任何关联
 # sqlalchemy 连接数据库
 from sqlalchemy import create_engine, Column, INTEGER, String, Float, Boolean, DECIMAL, Enum
-from sqlalchemy import DATE, DATETIME, TIME, Text
+from sqlalchemy import DATE, DATETIME, TIME, Text, func
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -33,44 +33,28 @@ class User(Base):
     __tablename__ = 'user'
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     username = Column(String(50), nullable=False)
-
-
-
-
-class Article(Base):
-    __tablename__ = "article"
-    id = Column(INTEGER, primary_key=True, autoincrement=True)
-    title = Column(String(50), nullable=False)
-    create_time = Column(DATETIME, nullable=False, default=datetime.now)
-    uid = Column(INTEGER, ForeignKey('user.id'))
-    author = relationship('User', backref=backref("articles", lazy='dynamic'))
-
-    def __str__(self):
-        return '%s' % self.title
-
-    # print结果集的时候会执行这个方法
-    def __repr__(self):
-        return '%s : %s' % (self.title, self.create_time)
+    age = Column(INTEGER, default=0)
+    gender = Column(Enum('male', 'female', 'secret'), default='male')
 
 
 def my_init_db():
     Base.metadata.drop_all()
     Base.metadata.create_all()
-    user = User(username="1111")
-    for i in range(100):
-        article = Article(title='title %s' % i)
-        article.author = user
-        session.add(article)
+    user1 = User(username="1111", age=17, gender='male')
+    user2 = User(username="2222", age=17, gender='male')
+    user3 = User(username="3333", age=18, gender='female')
+    user4 = User(username="4444", age=19, gender='female')
+    user5 = User(username="5555", age=20, gender='female')
+    session.add_all([user1, user2, user3, user4, user5])
     session.commit()
 
 
 def operation():
-    user = session.query(User).first()
-    # print(user.articles)
-    # print(user.articles.limit(10).all())
-    article = Article(title='title 100')
-    user.articles.append(article)
-    session.commit()
+    # result = session.query(User.gender, func.count(User.id)).group_by(User.gender).all()
+    result = session.query(User.age, func.count(User.id)).group_by(User.age).having(User.age >=18).all()
+    print(result)
+    # session.commit()
+
 
 if __name__ == '__main__':
     # my_init_db()

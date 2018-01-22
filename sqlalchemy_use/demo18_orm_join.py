@@ -1,7 +1,7 @@
 # demo与flask无任何关联
 # sqlalchemy 连接数据库
 from sqlalchemy import create_engine, Column, INTEGER, String, Float, Boolean, DECIMAL, Enum
-from sqlalchemy import DATE, DATETIME, TIME, Text
+from sqlalchemy import DATE, DATETIME, TIME, Text, func
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -35,15 +35,13 @@ class User(Base):
     username = Column(String(50), nullable=False)
 
 
-
-
 class Article(Base):
     __tablename__ = "article"
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     title = Column(String(50), nullable=False)
     create_time = Column(DATETIME, nullable=False, default=datetime.now)
     uid = Column(INTEGER, ForeignKey('user.id'))
-    author = relationship('User', backref=backref("articles", lazy='dynamic'))
+    author = relationship('User', backref=backref("articles"))
 
     def __str__(self):
         return '%s' % self.title
@@ -54,23 +52,31 @@ class Article(Base):
 
 
 def my_init_db():
-    Base.metadata.drop_all()
-    Base.metadata.create_all()
-    user = User(username="1111")
-    for i in range(100):
-        article = Article(title='title %s' % i)
-        article.author = user
-        session.add(article)
+    # Base.metadata.drop_all()
+    # Base.metadata.create_all()
+    # user = User(username="1111")
+    # user1 = User(username="2222")
+    # # user = session.query(User).first()
+    # article1 = Article(title='aaaa')
+    # article1.author = user
+    # article2 = Article(title='bbbb')
+    # article3 = Article(title='cccc')
+    # article4 = Article(title='dddd')
+    # user1.articles.extend([article2, article3, article4])
+    # user2 = User(username='3333')
+    # session.add(user)
+    # session.add(user1)
+    # session.add(user2)
     session.commit()
 
 
 def operation():
-    user = session.query(User).first()
-    # print(user.articles)
-    # print(user.articles.limit(10).all())
-    article = Article(title='title 100')
-    user.articles.append(article)
-    session.commit()
+    result = session.query(User.username, func.count(Article.id)).join(Article, User.id == Article.uid, isouter=True).group_by(
+        User.id).order_by(func.count(Article.id).desc()).all()
+    print(result)
+
+    "select user.username,count(article.id) from user left JOIN article on article.uid=user.id GROUP BY user.id order by (count(article.id)) "
+
 
 if __name__ == '__main__':
     # my_init_db()

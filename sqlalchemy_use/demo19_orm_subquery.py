@@ -1,7 +1,7 @@
 # demo与flask无任何关联
 # sqlalchemy 连接数据库
 from sqlalchemy import create_engine, Column, INTEGER, String, Float, Boolean, DECIMAL, Enum
-from sqlalchemy import DATE, DATETIME, TIME, Text
+from sqlalchemy import DATE, DATETIME, TIME, Text, func
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -33,44 +33,34 @@ class User(Base):
     __tablename__ = 'user'
     id = Column(INTEGER, primary_key=True, autoincrement=True)
     username = Column(String(50), nullable=False)
+    city = Column(String(50), nullable=False)
+    age = Column(INTEGER, default=0)
 
-
-
-
-class Article(Base):
-    __tablename__ = "article"
-    id = Column(INTEGER, primary_key=True, autoincrement=True)
-    title = Column(String(50), nullable=False)
-    create_time = Column(DATETIME, nullable=False, default=datetime.now)
-    uid = Column(INTEGER, ForeignKey('user.id'))
-    author = relationship('User', backref=backref("articles", lazy='dynamic'))
-
-    def __str__(self):
-        return '%s' % self.title
-
-    # print结果集的时候会执行这个方法
     def __repr__(self):
-        return '%s : %s' % (self.title, self.create_time)
+        return '<user(username : %s)>' % self.username
 
 
 def my_init_db():
     Base.metadata.drop_all()
     Base.metadata.create_all()
-    user = User(username="1111")
-    for i in range(100):
-        article = Article(title='title %s' % i)
-        article.author = user
-        session.add(article)
+    user1 = User(username='1111', city='aaaa', age=18)
+    user2 = User(username='2222', city='aaaa', age=18)
+    user3 = User(username='3333', city='bbbb', age=18)
+    user4 = User(username='4444', city='aaaa', age=20)
+    session.add_all([user1, user2, user3, user4])
     session.commit()
 
 
 def operation():
-    user = session.query(User).first()
-    # print(user.articles)
-    # print(user.articles.limit(10).all())
-    article = Article(title='title 100')
-    user.articles.append(article)
-    session.commit()
+    # 与1111同城市和年龄的人
+    # 传统方式:
+    # user = session.query(User).filter(User.username == '1111').first()
+    # result = session.query(User).filter(User.city == user.city, User.age == user.age).all()
+    # print(result)
+    # 子查询方式:
+    sub = session.query(User.city.label("city1"), User.age.label("age1")).filter(User.username == '1111').subquery()
+    result = session.query(User).filter(User.city == sub.c.city1, User.age == sub.c.age1).all()
+    print(result)
 
 if __name__ == '__main__':
     # my_init_db()
