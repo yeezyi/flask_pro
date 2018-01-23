@@ -102,3 +102,7 @@ ENV/
 
 .pyc
 .idea/
+
+# alembic 数据库迁移工具
+migrate/
+alembic.ini

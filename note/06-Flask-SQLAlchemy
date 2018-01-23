@@ -68,3 +68,26 @@ ORM操作(不再需要从SQLAlchemy导入Integer,String等模块,直接使用db.
     # user = User.query.first()
     # db.session.delete(user)
     # db.session.commit()
+
+alembic(非Flask项目内的用法)
+    安装:
+        pip3 install alembic
+    用法(如在虚拟环境中需要进入到虚拟环境):
+        1.初始化alembic仓库:cd到项目目录,执行命令'alembic init alembic',创建一个名叫'alembic'的仓库
+            --> 会生成一个仓库名命名的文件夹和alembic.ini配置文件
+        2.创建模型类:创建一个'model.py',然后在里面定义你的模型类
+        3.修改配置文件
+            a.在alembic.ini中设置数据库的连接,sqlalchemy.url = driver://user:pass@localhost/dbname
+            以Mysql为例:sqlalchemy.url = mysql+pymysql://root:pass@localhost/t4?charset=utf8
+            b.为了使用模型类更新数据库,需要在env.py文件中设置target_metadata,默认为target_metadata=None,
+            使用sys模块把当前项目的路径导入到path中:
+                import sys, os
+                sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                import demo20_orm_alembic
+                target_metadata = demo20_orm_alembic.Base.metadata
+        4.自动生成迁移文件:使用alembic revision --autogenerate -m "message" 将当前模型中的状态迁移到数据库
+        5.更新数据库, 使用alembic upgrade head 将刚刚生成的迁移文件,真正映射到数据库.
+            同理,如果要降级,那么使用 alembic downgrade head
+        6.之后修改模型后, 重复4~5
+        7.命令和参数解释:
+            init: 创建一个alembic仓库
