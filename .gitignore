@@ -104,5 +104,6 @@ ENV/
 .idea/
 
 # alembic 数据库迁移工具
+flask_pro2_alembic/
 migrate/
 alembic.ini

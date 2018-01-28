@@ -91,3 +91,108 @@ alembic(非Flask项目内的用法)
         6.之后修改模型后, 重复4~5
         7.命令和参数解释:
             init: 创建一个alembic仓库
+            revision: 创建一个新的版本文件
+            --autogenerate: 自动将当前模型的修改,生成迁移脚本
+            -m : 本次迁移做了哪些修改,用户可以指定这个参数,方便回顾
+            upgrade: 将指定版本的迁移文件映射到数据库中,会执行版本文件中的upgrade函数.
+                    如果有多个迁移脚本没有被映射到数据库中,那么会执行多个迁移脚本
+            [head]: 代表最新的迁移脚本的版本号
+            downgrade: 会执行指定版本的迁移文件中的 downgrade 函数
+            heads: 展示head指向的脚本文件版本号
+            history: 列出所有的迁移脚本及其信息
+            current: 展示当前数据库中的版本号
+        PS:第一次执行upgrade的时候,alembic会在数据库中创建一个名叫alembic_version表,这个表只会有一条数据
+            记录当前数据库映射的是哪个版本的迁移文件
+        8.经典错误:
+            a. target database is not up to date.
+                原因:主要是heads和current不相同,current落后于heads版本
+                解决:将current移动到head上.  -->alembic upgrade head
+            b. Can't locate revision identified by '......'
+                原因:数据库中存的版本号不存在脚本迁移文件(版本号对应的脚本文件被删除了)
+                解决:删除alembic_version表中的数据,重新执行alembic upgrade head
+            c. 执行 alembic upgrade head 时报某个表已经存在的错误
+                原因:执行这个命令的时候,会执行所有的迁移脚本,因为数据库中已经存在了这个表,然后迁移脚本中又包含了创建表的代码
+                解决方法1: 删除versions中所有的迁移文件
+                解决方法2: 修改迁移文件中创建表的代码
+
+Flask-SQLAlchemy使用alembic
+    上面第3步的b:
+    import sys, os
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    import flask_pro2
+    target_metadata = flask_pro2.db.Model.metadata
+
+Flask-Script(通过命令行操作Flask)
+    安装:
+        pip3 install flask-script
+    使用:
+        1.绑定app
+            from flask_script import Manager
+            from flask_pro import app
+
+            manager = Manager(app)
+            if __name__ == '__main__':
+                manager.run()
+        2.创建命令
+            # 将great变成一个命令(无法带参数)  --> python manage.py great 会输出"你好"
+            @manager.command
+            def great():
+                print('你好')
+
+            # 创建带参数的命令  --> python manage.py add_user -u abc --age 15
+            @manager.option('-u', '--username', dest='username')
+            @manager.option('-a', '--age', dest='age')
+            def add_user(username, age):
+                print('输入的用户为 %s, %s岁' % (username, age))
+        3.创建子命令(如果有一些命令时针对某个功能的,如ORM表映射,那么可以放在一个py文件中统一管理)
+            a.创建子命令的py文件,绑定app,创建命令
+                from flask_script import Manager
+                db_manage = Manager()
+
+                # 添加到主manager后,使用python manage.py db init命令即可运行该方法
+                @db_manage.command
+                def init():
+                    print('初始化成功')
+            b.在主命令文件中添加子命令
+                from manage_db import db_manage
+                manager.add_command('db', db_manage)
+                # -->之后就可以使用python manage.py db xxxx 运行命令
+
+循环引用问题
+    使用models.py创建模型后,app文件要使用models必须导入,但models.py文件创建模型也要使用app文件的db
+    此时可以创建第三个文件来解决这个问题
+    exts.py
+        from flask_sqlalchemy import SQLAlchemy
+        db = SQLAlchemy()
+    models.py
+        from exts import db
+        class User(db.Model):
+            ...
+    flask_pro.py
+        from exts import db
+        db.init_app(app)
+        from models import User
+
+Flask-Migrate(基于alembic封装)
+    安装:
+        pip3 install flask-migrate
+    使用:
+    flask-script-manage的py文件中
+         from flask_script import Manager
+         from flask_pro2 import app
+         from flask_migrate import Migrate, MigrateCommand
+         from exts import db
+         # 必须将模型导入到这个py文件中,否则有可能映射不到,因为app文件可能未导入此模型
+         from models import User,Article
+         manager = Manager(app)
+         # 绑定flask-migrate到app和SQLAlchemy
+         Migrate(app, db)
+         # 将Migrate子命令添加到Flask-Script的 db 子命令中
+         manager.add_command('db', MigrateCommand)
+    相关命令(python xx.py db --help):
+        1.初始化 python xx.py db init
+        2.创建映射脚本文件 python xx.py db migrate
+        3.映射到数据库 python xx.py db upgrade
+
+通常项目相关文件创建过程:
+    config.py配置数据库连接 --> exts.py创建db --> models.py使用db创建模型

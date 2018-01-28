@@ -1,0 +1,90 @@
+Flask-WTF是简化了WTForms操作的一个第三方库,其主要功能有:
+    1.验证用户提交数据的合法性
+    2.渲染模板
+    3.CSRF保护,文件上传等
+
+    安装:
+        pip3 install flask-wtf
+
+常用验证器文档:http://wtforms.readthedocs.io/en/latest/validators.html
+常用字段文档:http://wtforms.readthedocs.io/en/latest/field.html#basic-fields
+
+做表单验证:
+    a.自定义一个表单类,继承自wtforms.Form类
+    from wtforms import Form,StringField
+        class RegistForm(Form):
+            ...
+    b.定义好需要验证的字段,字段名必须和模板中那些需要验证的input标签的name属性值保持一致
+    c.在需要验证的字段上,需要指定好具体的数据类型
+        from wtforms.validators import Length, EqualTo
+            # 变量名和表单的name值保持一致
+            username = StringField(validators=[Length(min=3, max=10, message='长度')])
+            password = StringField(validators=[Length(min=6, max=10)])
+            password_repeat = StringField(validators=[Length(min=6, max=10), EqualTo('password')])
+    d.在相关的字段上,指定验证器,验证器可以指定验证不通过时的提示信息
+    e.在视图函数中,就只需要使用这个表单类的对象,并且把需要验证的数据(request.form)传给这个表单类
+        验证失败可以通过form.errors获取具体的错误信息
+        form = RegistForm(request.form)
+        if form.validate():
+            # 通过验证
+            return "success"
+        else:
+            print(form.errors)
+            return "fail"
+
+常用验证器:
+    1.Email: 验证上传的数据是否为邮箱
+    2.EqualTo: 验证上传的数据是否和另外一个字段相等, 常用的就是密码和确认密码
+    3.InputRequired: 原始数据的需要验证. 如果不是特殊情况,应该使用InputRequired,必须传值时需要这个验证器
+    4.Length: 长度限制,有min和max两个值进行限制
+    5.NumberRange: 数字的区间, 有min和max两个值限制,如果处在这两个数字之间则满足
+    6.Regexp: 自定义正则表达式
+    7.URL: 必须是URL的形式(必须http或https开头)
+    8.UUID: 验证UUID
+
+自定义验证器:
+    1.定义一个'validate_字段名'函数
+    2.field.data可以获取到字段对应的数据
+    3.如果数据验证失败,则应该抛出ValidationError('error msg!')异常,如果验证成功,可以什么都不做
+        def validate_captcha(self, field):
+            # field.data 存放要验证的数据
+            if field.data != '1234':
+                raise ValidationError('验证码错误!')
+
+渲染表单:
+    form.py:
+        class SettingsForm(Form):
+            # 第一个参数label是指渲染模板时使用form.username.label时的值,默认使用变量名首字母大写
+            username = StringField('用户名:', validators=[InputRequired()])
+            remember = BooleanField('记住我: ')
+            # ('a', 'app') a为标签传递的值, app为标签显示的值
+            tags = SelectField('学科:', choices=[('a', 'app'), ('b', 'base'), ('c', 'c++')])
+    视图函数:
+        form = SettingForm() # 不需要传递数据
+        return时把form传递给模板
+    表单渲染:
+        <tbody>
+            <tr>
+                <td>{{ form.username.label }}</td>
+                <td>{{ form.username(class='username-input') }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.remember.label }}</td>
+                <td>{{ form.remember() }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.tags.label }}</td>
+                <td>{{ form.tags() }}</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="提交"></td>
+            </tr>
+        </tbody>
+
+    css渲染:
+        <style>
+            .username-input{
+                background-color: aqua;
+            }
+        </style>
