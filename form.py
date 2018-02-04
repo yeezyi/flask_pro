@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, IntegerField, BooleanField, SelectField
+from wtforms import Form, StringField, IntegerField, BooleanField, SelectField, FileField
 from wtforms.validators import Length, EqualTo, Email, InputRequired, NumberRange, Regexp, URL, UUID
 from wtforms.validators import ValidationError
 
@@ -32,3 +32,11 @@ class SettingsForm(Form):
     remember = BooleanField('记住我: ')
     # ('a', 'app') a为标签传递的值, app为标签显示的值
     tags = SelectField('学科:', choices=[('a', 'app'), ('b', 'base'), ('c', 'c++')])
+
+
+from flask_wtf.file import FileRequired, FileAllowed
+class UploadForm(Form):
+    # 允许什么格式的文件能够上传
+    upload_set = {'jpg', 'png', 'txt', 'gif'}
+    avatar = FileField(validators=[FileRequired(), FileAllowed(upload_set=upload_set)])
+    desc = StringField(validators=[InputRequired()])

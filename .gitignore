@@ -107,3 +107,4 @@ ENV/
 flask_pro2_alembic/
 migrate/
 alembic.ini
+upload_files/

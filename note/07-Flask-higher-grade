@@ -88,3 +88,44 @@ Flask-WTF是简化了WTForms操作的一个第三方库,其主要功能有:
                 background-color: aqua;
             }
         </style>
+
+上传文件:
+    1.一个 <form> 标签被标记有 enctype=multipart/form-data,并且在里面包含一个 <input type=file> 标签.
+    2.服务端应用通过请求对象上的 files 字典访问文件.  abc = request.files.get('xxxx')
+    3.上传文件之前,应该使用'werkzeug.utils.secure_filename'方法包装文件名,使上传的文件名是安全的文件名
+        upload_path = os.path.join(os.path.dirname(__file__), 'upload_files')
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(avatar.filename)
+    4.使用文件的 save() 方法将文件永久地保存在文件系统上的某处.
+        abc.save(os.path.join(upload_path, filename))
+    5.获取服务器的文件时,应该定义一个视图方法,使用'send_from_directory(文件路径,文件名)'方法即可
+        from flask import send_from_directory
+        file_path = os.path.join(os.path.dirname(__file__), 'upload_files')
+        return send_from_directory(file_path, filename)
+
+对上传文件进行表单验证:
+    1.定义表单的时候,对文件的字段,采用'FileField'字段
+        from wtforms import FileField
+    2.验证器从'flask_wtf.file'中导入.'FileRequired'验证上传文件是否为空,'FileAllowed'验证上传文件的后缀名
+        from flask_wtf.file import FileRequired, FileAllowed
+        avatar = FileField(validators=[FileRequired(), FileAllowed(upload_set=upload_set)])
+    3.视图函数创建form实例对象时,使用'werkzeug.datastructures.CombinedMultiDict'组合'request.form'和'request.file'
+        from werkzeug.datastructures import CombinedMultiDict
+        form = UploadForm(CombinedMultiDict([request.form, request.files]))
+
+cookie
+    概念:
+        1.cookie有有效期:服务器可以设置cookie的有效期,以后浏览器会自动的清除过期的cookie
+        2.cookie有域名的概念:只有访问同一个域名,才会把之前相同域名的cookie携带给服务器.
+            也就是说, 访问A站的时候不会把B站的cookie发送过去
+    操作:
+        1.设置cookie
+            set_cookie(self, key, value='', max_age=None, expires=None,
+                       path='/', domain=None, secure=False, httponly=False,
+                       samesite=None)
+        2.删除cookie
+        3.设置cookie的有效期
+        4.设置cookie的有效域名
+
+
+session

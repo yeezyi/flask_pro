@@ -1,6 +1,7 @@
 from flask import Flask, render_template,request
 import config
 from form import RegistForm, LoginForm, SettingsForm
+import os
 app = Flask(__name__)
 app.config.from_object(config)
 
@@ -61,6 +62,57 @@ def setting():
         else:
             print(form.errors)
             return 'fail'
+
+
+# @app.route('/upload/', methods=['GET', 'POST'])
+# def upload():
+#     if request.method == 'GET':
+#         return render_template('upload.html')
+#     else:
+#         desc = request.form.get('desc', 'No DESCRIBE')
+#         avatar = request.files.get('avatar')
+#         upload_path = os.path.join(os.path.dirname(__file__), 'upload_files')
+#         from werkzeug.utils import secure_filename
+#         # 对文件名进行包装,解决安全隐患
+#         filename = secure_filename(avatar.filename)
+#         print(filename)
+#         avatar.save(os.path.join(upload_path, filename))
+#         print(desc)
+#         return 'success'
+
+from form import UploadForm
+@app.route('/upload/', methods=['GET', 'POST'])
+def upload():
+    if request.method == 'GET':
+        return render_template('upload.html')
+    else:
+        # 将两个不可变字典(request.form,request.file)组合成一个字典
+        from werkzeug.datastructures import CombinedMultiDict
+        form = UploadForm(CombinedMultiDict([request.form, request.files]))
+        if form.validate():
+            desc = request.form.get('desc', 'No DESCRIBE')
+            # 或 desc = form.desc.data
+            avatar = request.files.get('avatar')
+            # 或 avatar = form.avatar.data
+            upload_path = os.path.join(os.path.dirname(__file__), 'upload_files')
+            from werkzeug.utils import secure_filename
+            # 对文件名进行包装,解决安全隐患
+            filename = secure_filename(avatar.filename)
+            print(filename)
+            avatar.save(os.path.join(upload_path, filename))
+            print(desc)
+            return 'success'
+        else:
+            print(form.errors)
+            return 'fail'
+
+
+
+@app.route('/getfile/<filename>/')
+def get_file(filename):
+    from flask import send_from_directory
+    file_path = os.path.join(os.path.dirname(__file__), 'upload_files')
+    return send_from_directory(file_path, filename)
 
 
 if __name__ == '__main__':
