@@ -5,7 +5,7 @@ DEBUG = True
 # SECRET_KEY
 # SQLALCHEMY_DB
 
-# SERVER_NAME = 'lmc.com:5000'
+# SERVER_NAME = 'lmc.com:8004'
 
 HOST = '127.0.0.1'
 PORT = 3306
