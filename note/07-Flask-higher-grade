@@ -120,12 +120,43 @@ cookie
             也就是说, 访问A站的时候不会把B站的cookie发送过去
     操作:
         1.设置cookie
+            在Response对象上设置cookie,response.set_cookie(...)
             set_cookie(self, key, value='', max_age=None, expires=None,
                        path='/', domain=None, secure=False, httponly=False,
                        samesite=None)
+                key, value : 键和值(一组键值对为一个cookie)
+                max_age : 过期时间,a number of seconds,服务器发送请求后的有效秒数
+                expires : 过期时间,a `datetime` object or UNIX timestamp. 过期的固定时间
+                domain : 有效域名
+                path :  cookie在哪些url有效,为'/'时代表当前域名下全网有效
+                secure : 为True时代表只能在https下访问
+                httponly : 为True时cookie只能被浏览器读取,不能被JavaScript读取
         2.删除cookie
+            delete_cookie(self, key, path='/', domain=None)
+                key: 键
+                path:if the cookie that should be deleted was limited to a
+                     path, thae path has to be defined here.
+                domain:if the cookie that should be deleted was limited to a
+                       domain, that domain has to be defined here.
         3.设置cookie的有效期
+            max_age = 60 , 代表cookie有效期为60秒
+            from datetime import datetime
+            expires = datetime(year=2018, month=2, day=6, hour=10, minute=0, second=0), 代表过期时间为2018.2.6/18:00:00
+                因为服务器传回的时间是格林尼治时间,浏览器会加上时区时间(中国--东八区--加8小时)
+            或:
+            from datetime import timedelta
+            expires = datetime.now() + timedelta(day=29, hour=16)
+            ps: 如果同时指定了max_age和expires,则以max_age的值为准,如果都没有指定,则关闭浏览器时cookie过期
         4.设置cookie的有效域名
+            默认只能在主域名下使用cookie,子域名无法获取到
+            domain='.xx.com'  这样设置后所有子域名都可以获取到cookie
+            if you want to set a cross-domain cookie.  For example,
+                       ``domain=".example.com"`` will set a cookie that is
+                       readable by the domain ``www.example.com``,
+                       ``foo.example.com`` etc.  Otherwise, a cookie will only
+                       be readable by the domain that set it.
+        5.获取cookie
+            request.cookies.get('cookie_key')
 
 session与cookie的结合使用
     1.session存储在服务器端:服务器端可以采用mysql,redis,memcached等方式存储session信息
@@ -134,3 +165,4 @@ session与cookie的结合使用
         服务器再从cookie中拿到session_id,再从session容器中找到这个用户
     2.session存储到客户端:原理是客户端发送验证信息到服务器通过验证后,服务器把相关的验证信息进行一个非常严格和安全的加密方式进行加密,
         再把这个加密后的信息存储到cookie,返回给浏览器.以后浏览器再请求服务器的时候,服务器拿到cookie的信息再解密,即可得到验证信息
+

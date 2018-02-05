@@ -7,7 +7,7 @@ SECRET_KEY = os.urandom(24)  # 产生一个24位随机的key
 
 # SQLALCHEMY_DB
 
-# SERVER_NAME = 'lmc.com:5000'
+# SERVER_NAME = 'lmc.com:8004'
 
 HOST = '127.0.0.1'
 PORT = 3306
