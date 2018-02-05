@@ -2,7 +2,9 @@
 # 以debug模式运行，出错时页面会显示错误信息，且在此模式下，python文件被修改时会自动重新run
 DEBUG = True
 
-# SECRET_KEY
+import os
+SECRET_KEY = os.urandom(24)  # 产生一个24位随机的key
+
 # SQLALCHEMY_DB
 
 # SERVER_NAME = 'lmc.com:5000'

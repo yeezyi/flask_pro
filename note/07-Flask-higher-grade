@@ -127,5 +127,10 @@ cookie
         3.设置cookie的有效期
         4.设置cookie的有效域名
 
-
-session
+session与cookie的结合使用
+    1.session存储在服务器端:服务器端可以采用mysql,redis,memcached等方式存储session信息
+    原理是客户端发送验证信息到服务器端验证通过后,把用户的相关信息存储到session中.然后随机生成一个唯一的session_id,
+        然后把这个sess_id存储在cookie中返回给浏览器.之后浏览器再请求服务器,就会把session_id自动发送给服务器
+        服务器再从cookie中拿到session_id,再从session容器中找到这个用户
+    2.session存储到客户端:原理是客户端发送验证信息到服务器通过验证后,服务器把相关的验证信息进行一个非常严格和安全的加密方式进行加密,
+        再把这个加密后的信息存储到cookie,返回给浏览器.以后浏览器再请求服务器的时候,服务器拿到cookie的信息再解密,即可得到验证信息
