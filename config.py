@@ -2,8 +2,13 @@
 # 以debug模式运行，出错时页面会显示错误信息，且在此模式下，python文件被修改时会自动重新run
 DEBUG = True
 
+# 用于生成session的随机value
 import os
 SECRET_KEY = os.urandom(24)  # 产生一个24位随机的key
+
+# 设置session的过期时间
+from datetime import timedelta
+PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
 
 # SQLALCHEMY_DB
 

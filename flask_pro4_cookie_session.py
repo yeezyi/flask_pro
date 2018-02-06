@@ -17,7 +17,7 @@ def index():
     return resp
 
 
-@app.route('/del')
+@app.route('/del/')
 def del_cookie():
     resp = Response('aaa')
     resp.delete_cookie('cookie_key')
@@ -27,6 +27,8 @@ def del_cookie():
 @app.route('/session/')
 def set_session():
     session['session_id'] = 'session_value'
+    # permanent: 持久化, 为True且config没有设置PERMANENT_SESSION_LIFETIME时session会保持31天
+    session.permanent = True
     return 'session success'
 
 

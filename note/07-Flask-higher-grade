@@ -166,3 +166,20 @@ session与cookie的结合使用
     2.session存储到客户端:原理是客户端发送验证信息到服务器通过验证后,服务器把相关的验证信息进行一个非常严格和安全的加密方式进行加密,
         再把这个加密后的信息存储到cookie,返回给浏览器.以后浏览器再请求服务器的时候,服务器拿到cookie的信息再解密,即可得到验证信息
 
+flask操作session:
+    1.设置session: 通过'flask.session'就可以操作session了.
+        from flask import session
+        session['session_key'] = 'session_value'
+    2.获取session:
+        val = session.get('session_key')
+    3.删除session:
+        session.pop('session_key')  # 清除session内的某对键值对
+        # 或: del session['session_key']
+        # session.clear()  # 清空session内的所有键值
+    4.设置session的有效期:
+        # permanent: 持久化, 为True且config没有设置PERMANENT_SESSION_LIFETIME时session会保持31天
+        session.permanent = True
+        配置文件config.py:
+            # 自定义session的过期时间
+            from datetime import timedelta
+            PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
