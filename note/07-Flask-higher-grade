@@ -20,7 +20,7 @@ Flask-WTF是简化了WTForms操作的一个第三方库,其主要功能有:
             # 变量名和表单的name值保持一致
             username = StringField(validators=[Length(min=3, max=10, message='长度')])
             password = StringField(validators=[Length(min=6, max=10)])
-            password_repeat = StringField(validators=[Length(min=6, max=10), EqualTo('password')])
+            password_repeat = StringField(EqualTo('password')])
     d.在相关的字段上,指定验证器,验证器可以指定验证不通过时的提示信息
     e.在视图函数中,就只需要使用这个表单类的对象,并且把需要验证的数据(request.form)传给这个表单类
         验证失败可以通过form.errors获取具体的错误信息
@@ -50,7 +50,22 @@ Flask-WTF是简化了WTForms操作的一个第三方库,其主要功能有:
             # field.data 存放要验证的数据
             if field.data != '1234':
                 raise ValidationError('验证码错误!')
-
+    或:
+        # 对全部字段一次性自定义验证
+        def validate(self):
+            # 先执行父类的validate()方法,即类的字段验证
+            result = super(Login, self).validate()
+            # 如果第一层验证都没通过,则返回False
+            if not result:
+                return False
+            else:
+                # 开始自定义的验证
+                email = self.email.data
+                password = self.password.data
+                user = User.query.filter(email=email,password=password)
+                if not user:
+                    self.email.errors.append()
+                    return False
 渲染表单:
     form.py:
         class SettingsForm(Form):
@@ -183,3 +198,35 @@ flask操作session:
             # 自定义session的过期时间
             from datetime import timedelta
             PERMANENT_SESSION_LIFETIME = timedelta(hours=2)
+
+csrf 防御 (<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>)
+    1.from flask_wtf import CSRFProtect  # CsrfProtect是旧版本的
+    2.CSRFProtect(app)  # 绑定app后就可以解决了
+    3.表单:<input type='hidden' name='csrf_token' value="{{ csrf_token() }}">
+      ajax:
+        var csrftoken = $('input[name=csrf_token]').val()
+        $.post({
+            'url': '/xxx/',
+            'data': {
+                'email': email,
+                'password': password
+                'csrf_token': csrftoken
+            },
+            'success': function(data){
+                console.log(data);
+            },
+            'fail': function(error){
+                console.log(error);
+            }
+        });
+        或:
+        在header部分:<meta name="csrf-token" content="{{ csrf_token() }}">
+        var csrftoken = $('meta[name=csrf-token]').attr('content');
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings){
+                if(!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomail){
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                }
+            }
+        });
+        或: csrfajax.js 模板加 csrfajax.post{{...}}
