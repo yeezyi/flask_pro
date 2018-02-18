@@ -79,7 +79,32 @@ Flask上下文
         然后从b.py中from flask import g
         print(g.name)  # 会输出abc
 
-    钩子函数:
-        before_request:
-        context_processor:
-        errorhandler:
+    常用的钩子函数：
+        before_first_request：处理第一次请求之前执行。例如以下代码：
+          @app.before_first_request
+          def first_request():
+              print 'first time request'
+        before_request：在每次请求之前执行。通常可以用这个装饰器来给视图函数增加一些变量。例如以下代码：
+          @app.before_request
+          def before_request():
+              if not hasattr(g,'user'):
+                  setattr(g,'user','xxxx')
+        teardown_appcontext：不管是否有异常，注册的函数都会在每次请求之后执行。
+          @app.teardown_appcontext
+          def teardown(exc=None):
+              if exc is None:
+                  db.session.commit()
+              else:
+                  db.session.rollback()
+              db.session.remove()
+        template_filter：在使用Jinja2模板的时候自定义过滤器。比如可以增加一个upper的过滤器（当然Jinja2已经存在这个过滤器，本示例只是为了演示作用）：
+          @app.template_filter
+          def upper_filter(s):
+              return s.upper()
+        context_processor：上下文处理器。返回的字典中的键可以在模板上下文中使用。例如：
+          @app.context_processor
+          return {'current_user':'xxx'}
+        errorhandler：errorhandler接收状态码，可以自定义返回这种状态码的响应的处理方法。例如：
+          @app.errorhandler(404)
+          def page_not_found(error):
+              return 'This page does not exist',404
