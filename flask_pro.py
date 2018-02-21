@@ -38,7 +38,7 @@ def article(id):
     return 'get_id : ' + id
 
 
-@app.route('/list/')
+@app.route('/list/<id>/')
 def my_list(id):
     return 'get_id : ' + id
 
@@ -150,6 +150,14 @@ class SettingsView(views.View):
 app.add_url_rule('/setting/', view_func=SettingsView.as_view('setting'))
 
 app.add_url_rule('/list1/', endpoint='list111', view_func=my_list1)
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    # 404为状态码, 不加时返回的状态码为200
+    # return 'This page does not exist', 404
+    return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     app.run()

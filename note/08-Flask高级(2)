@@ -70,41 +70,54 @@ Flask上下文
     2.如果在写测试代码,或者离线脚本的时候,我们有时候可能需要创建多个请求上下文,这时候就需要存放到一个栈中了.
     使用哪个请求上下文的时候,就把对应的请求上下文放到栈的顶部,用完了就要把这个请求上下文从栈中移除掉
 
-    g对象(global的简写):g对象时在整个Flask应用运行期间都是可以使用的.并且他也是跟request一样,是线程隔离的.
-        这个对象时专门用来爱存储开发者自己定义的一些数据,方便在整个Flask程序中都可以使用.
-        一般使用就是,将一些经常会用到的数据绑定到上面,以后就直接从g上面取就可以了,而不需要通过传参的形式,这样更加方便
-        如:
-        a.py中from flask import g
-        g.name = 'abc'
-        然后从b.py中from flask import g
-        print(g.name)  # 会输出abc
+g对象(global的简写):g对象时在整个Flask应用运行期间都是可以使用的.并且他也是跟request一样,是线程隔离的.
+    这个对象时专门用来爱存储开发者自己定义的一些数据,方便在整个Flask程序中都可以使用.
+    一般使用就是,将一些经常会用到的数据绑定到上面,以后就直接从g上面取就可以了,而不需要通过传参的形式,这样更加方便
+    如:
+    a.py中from flask import g
+    g.name = 'abc'
+    然后从b.py中from flask import g
+    print(g.name)  # 会输出abc
 
-    常用的钩子函数：
-        before_first_request：处理第一次请求之前执行。例如以下代码：
-          @app.before_first_request
-          def first_request():
-              print 'first time request'
-        before_request：在每次请求之前执行。通常可以用这个装饰器来给视图函数增加一些变量。例如以下代码：
-          @app.before_request
-          def before_request():
-              if not hasattr(g,'user'):
-                  setattr(g,'user','xxxx')
-        teardown_appcontext：不管是否有异常，注册的函数都会在每次请求之后执行。
-          @app.teardown_appcontext
-          def teardown(exc=None):
-              if exc is None:
-                  db.session.commit()
-              else:
-                  db.session.rollback()
-              db.session.remove()
-        template_filter：在使用Jinja2模板的时候自定义过滤器。比如可以增加一个upper的过滤器（当然Jinja2已经存在这个过滤器，本示例只是为了演示作用）：
-          @app.template_filter
-          def upper_filter(s):
-              return s.upper()
-        context_processor：上下文处理器。返回的字典中的键可以在模板上下文中使用。例如：
-          @app.context_processor
+常用的钩子函数：
+    before_first_request：处理第一次请求之前执行。例如以下代码：
+      @app.before_first_request
+      def first_request():
+          print 'first time request'
+    before_request：在每次请求之前执行。通常可以用这个装饰器来给视图函数增加一些变量。例如以下代码：
+      @app.before_request
+      def before_request():
+          if not hasattr(g,'user'):
+              setattr(g,'user','xxxx')
+    teardown_appcontext：不管是否有异常，注册的函数都会在每次请求之后执行。
+      @app.teardown_appcontext
+      def teardown(exc=None):
+          if exc is None:
+              db.session.commit()
+          else:
+              db.session.rollback()
+          db.session.remove()
+    template_filter：在使用Jinja2模板的时候自定义过滤器。比如可以增加一个upper的过滤器（当然Jinja2已经存在这个过滤器，本示例只是为了演示作用）：
+      @app.template_filter
+      def upper_filter(s):
+          return s.upper()
+    context_processor：上下文处理器。必须返回一个字典,返回的字典中的键可以在所有模板中使用。
+    例如在很多模板中都需要用到的变量,那么就可以使用这个钩子函数来返回,而不用在每个视图函数中去写：
+      @app.context_processor
+      def context_processor():
           return {'current_user':'xxx'}
-        errorhandler：errorhandler接收状态码，可以自定义返回这种状态码的响应的处理方法。例如：
-          @app.errorhandler(404)
-          def page_not_found(error):
-              return 'This page does not exist',404
+    errorhandler：errorhandler接收状态码，可以自定义返回这种状态码的响应的处理方法。
+    例如处理404页面不存在错误时,重定向到首页或自定义优雅的错误页面：
+      @app.errorhandler(404)
+      # 必须接受一个参数(error)来接受错误信息,没有这个参数会报错
+      def page_not_found(error):
+          # 必须返回相应的状态码,否则会当做200返回
+          return 'This page does not exist',404
+
+    视图函数内abort(404)的意思为手动抛出404错误,开发者可以视情况自行抛出相应的错误
+
+信号机制及其使用:
+    1.安装: pip install blinker
+    2.自定义信号:
+
+    3.flask 内置的9种信号:
