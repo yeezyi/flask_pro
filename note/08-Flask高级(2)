@@ -122,6 +122,7 @@ g对象(global的简写):g对象时在整个Flask应用运行期间都是可以�
         自定义信号分为3步，第一是定义一个信号，第二是监听一个信号，第三是发送一个信号。以下将对这三步进行讲解：
         定义信号：定义信号需要使用到blinker这个包的Namespace类来创建一个命名空间。比如定义一个在访问了某个视图函数的时候的信号。示例代码如下：
           from blinker import Namespace
+          # Namespace的作用是防止多人开发时,信号名字的冲突
           mysignal = Namespace()
           visit_signal = mysignal.signal('visit-signal')
         监听信号：监听信号使用singal对象的connect方法，在这个方法中需要传递一个函数，用来接收以后监听到这个信号该做的事情。示例代码如下：
@@ -131,15 +132,18 @@ g对象(global的简写):g对象时在整个Flask应用运行期间都是可以�
           mysignal.connect(visit_func)
         发送信号：发送信号使用singal对象的send方法，这个方法可以传递一些其他参数过去。示例代码如下：
           mysignal.send(username='zhiliao')
+          更好的方法是把参数存储到g对象中,监听函数从g对象中取到参数,此时mysignal.send()不用传递参数
     3.flask 内置的9种信号:
         flask.template_rendered：模版渲染完毕后发送，示例如下：
+        1.before_render_template和template_rendered  模板渲染前后,在render_template源码内发送了这两个信号
           from flask import template_rendered
+          # template 模板的名字,context传递给模板的参数
           def log_template_renders(sender,template,context,*args):
-              print 'sender:',sender
-              print 'template:',template
-              print 'context:',context
+              print('sender:',sender)
+              print('template:',template)
+              print('context:',context)
           template_rendered.connect(log_template_renders,app)
-          
+        2.request_started,request_finished,got_request_exception,request_tearing_down  请求前,后,异常,被销毁
         flask.request_started：请求开始之前，在到达视图函数之前发送，订阅者可以调用request之类的标准全局代理访问请求。示例如下：
           def log_request_started(sender,**extra):
               print 'sender:',sender
@@ -161,7 +165,7 @@ g对象(global的简写):g对象时在整个Flask应用运行期间都是可以�
           def log_request_tearing_down(sender,**kwargs):
               print 'coming...'
           request_tearing_down.connect(log_request_tearing_down,app)
-          
+        3.appcontext_tearing_down, appcontext_pushed, appcontext_popped应用上下文销毁
         flask.appcontext_tearing_down：在应用上下文销毁的时候发送，它总是会被调用，即使发生异常。示例代码如下：
           def log_appcontext_tearing_down(sender,**kwargs):
               print 'coming...'
