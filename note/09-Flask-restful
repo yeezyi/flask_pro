@@ -1,0 +1,35 @@
+安装：
+  pip install flask-restful
+使用（可以下载Postman测试Api）：
+  1.从'flask_restful'导入Api，创建一个Api对象
+  2.如果使用Flask-Restful，那么定义视图函数的时候，就要继承自flask_restful.Resource类，然后再根据当前请求的method来定义相应的方法。
+    from flask import Flask,render_template,url_for
+    from flask_restful import Api,Resource
+
+    app = Flask(__name__)
+    # 用Api来绑定app
+    api = Api(app)
+
+    class LoginView(Resource):
+        def get(self):
+            return "username"
+        def post(self):
+            return {"username":"zhiliao"}
+    # endpoint 用于url_for 反转url
+    api.add_resource(LoginView,'/login/',endpoint='login')
+  3.add_resource的第二个参数是访问这个视图函数的url，这个url可以跟之前的route一样，可以传递参数。
+    并且还有一点不同的是，这个方法可以传递多个url来指定这个视图函数。
+    如：
+    from flask import Flask,render_template,url_for
+    from flask_restful import Api,Resource
+
+    app = Flask(__name__)
+    # 用Api来绑定app
+    api = Api(app)
+
+    class LoginView(Resource):
+        # username=None,使一些其他url可以不带上username
+        def post(self,username=None):
+            return {"username":"zhiliao"}
+    # 此时/login/xx/和/regist/都可以访问这个url
+    api.add_resource(LoginView,'/login/<username>/','/regist/',mendpoint='index')
