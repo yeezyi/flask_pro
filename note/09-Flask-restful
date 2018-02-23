@@ -75,6 +75,7 @@
             return user
      在get方法中，返回user的时候，flask_restful会自动的读取user模型上的username以及age还有school属性。
      组装成一个json格式的字符串返回给客户端。
+     restful规范中要求,定义好了返回的参数后,即使这个参数没有值,也应该返回,返回一个Null回去
 
 重命名属性：
     很多时候你面向公众的字段名称是不同于内部的属性名。使用 attribute可以配置这种映射。
@@ -93,13 +94,58 @@
     有时候想要在返回的数据格式中，形成比较复杂的结构。那么可以使用一些特殊的字段来实现。
     比如要在一个字段中放置一个列表，那么可以使用fields.List，比如在一个字段下面又是一个字典，那么可以使用fields.Nested。
     以下是复杂结构的用法：
-    class ProfileView(Resource):
+    class ArticleView(Resource):
         resource_fields = {
-            'username': fields.String,
-            'age': fields.Integer,
-            'school': fields.String,
-            'tags': fields.List(fields.String),
-            'more': fields.Nested({
-                'signature': fields.String
-            })
+            'title': fields.String,
+            'user': fields.Nested({
+                'username': fields.String,
+                'user_email': fields.String(attribute='email')
+            }, attribute='author'),
+            # 'authorname': fields.String(attribute='author.username'),  # author指User模型
+            'tag': fields.List(fields.String(attribute='name'), attribute='tags')
         }
+
+        @marshal_with(resource_fields)
+        def get(self, a_id):
+            article = Article.query.get(a_id)
+            return article
+
+在蓝图中使用flask-restful
+    Api()类不再绑定app,直接绑定蓝图即可,之后app绑定蓝图即可实现蓝图中使用flask-restful
+    app.py:
+        from flask import Flask
+        from blueprints.bp_restful import bp_rest
+        import config
+        from exts import db
+
+        app = Flask(__name__)
+        app.config.from_object(config)
+        db.init_app(app)
+        app.register_blueprint(bp_rest)
+
+        if __name__ == '__main__':
+            app.run(debug=True, port=5008)
+    blueprint.py:
+        from flask import Blueprint
+        from flask_restful import Api, Resource, fields, marshal_with
+        from models import Article
+
+        bp_rest = Blueprint("rest", __name__, url_prefix='/api')
+        api = Api(bp_rest)
+
+        class ArticleView(Resource):
+            resource_fields = {
+                'article_title': fields.String(attribute='title'),
+                'author': fields.Nested({
+                    'author_name': fields.String(attribute='username'),
+                    'author_email': fields.String(attribute='email')
+                }),
+                'article_tag': fields.List(fields.String(attribute='name'), attribute='tags')
+            }
+
+            @marshal_with(resource_fields)
+            def get(self, article_id):
+                article = Article.query.get(article_id)
+                return article
+
+        api.add_resource(ArticleView, '/article/<article_id>/', endpoint='article')
