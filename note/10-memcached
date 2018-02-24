@@ -1,0 +1,22 @@
+Memcached 是通过在内存里维护一个统一的巨大的hash表,memcached能存储各种各样的数据,包括图像,视频(理论上可以),文件,以及数据库检索的结果等.
+    简单的说就是将数据调用到内存中,然后从内存中读取,从而大大的提高效率
+一般用Memcached存储验证码(图形验证码,短信验证码),登录session等所有不是至关重要的数据
+安装:
+    sudo apt-get install memcached
+启动:
+    快速:sudo service memcached start
+    其执行的命令为:/usr/bin/memcached -m 64 -p 11211 -u memcache -l 127.0.0.1
+    所有可以修改参数指定内存,端口等:/usr/bin/memcached -u memcache start
+        -u: 指定运行者的名字
+        -d: 以后台的形式运行
+        -m: 指定占用多少内存.以M为单位,默认64M
+        -p: 指定占用的端口,默认11211
+        -l: 别的机器可以通过哪个ip地址连接到我这台机器的memcached
+            通过service memcached start的方式启动memcached,那么memcached只能通过本机连接
+            如果需要让别的机器连接,则需要指定/usr/bin/memcached -u memcache -l 0.0.0.0 start
+        想要使用以上参数,那么不能使用service memcached start命令,而应该使用/usr/bin/memcached .-.-. start
+关闭:
+    killall memcached
+
+telnet操作memcached:
+    
