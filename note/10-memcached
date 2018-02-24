@@ -19,4 +19,80 @@ Memcached 是通过在内存里维护一个统一的巨大的hash表,memcached�
     killall memcached
 
 telnet操作memcached:
-    
+    连接：telnet ip地址 [11211]
+语法：
+    添加数据：
+        set：
+            语法：
+              > set key flas(是否压缩) timeout value_length(值的长度必须这么长，不能少不能多)
+              > value
+            示例：
+              > set username 0[是否压缩] 60[过期时间] 7[字符长度]
+              > zhiliao
+        add：
+            语法：
+              > add key flas(0) timeout value_length
+              > value
+            示例：
+              > add username 0 60 7
+              > xiaotuo
+    set和add的区别：add是只负责添加数据，不会去修改数据。如果添加的数据的key已经存在了，则添加失败，如果添加的key不存在，则添加成功。
+                而set不同，如果memcached中不存在相同的key，则进行添加，如果存在，则替换。
+
+    获取数据：
+        语法：
+          > get key
+        示例：
+          > get username
+    删除数据：
+        语法：
+          > delete key
+        示例：
+          > delete username
+    flush_all：删除memcached中的所有数据。
+    自增：
+        语法：
+            > incr key 2 为key的值加2，前提是memcached中有相应的key且value为数字类型
+        示例：
+            > incr name 2 为name的值加2
+    自减：
+        语法：
+            > decr key 3 为key的值减3，前提是memcached中有相应的key且value为数字类型
+        示例：
+            > decr name 3 为name的值减3
+    查看memcached的当前状态：
+        语法：stats
+            
+通过python操作memcached：
+
+    安装：python-memcached：pip install python-memcached。
+    建立连接(连接之前一定要先启动memcached)：
+         import memcache
+         mc = memcache.Client(['127.0.0.1:11211'],debug=True)
+         # 分布式，缓存分布存储在多个机器
+         # mc = memcache.Client(['127.0.0.1:11211', 'xxx.xxx.xxx.xxx:11211'],debug=True)
+    设置数据：
+         mc.set('username','hello world',time=60*5)
+         mc.set_multi({'email':'xxx@qq.com','telphone':'111111'},time=60*5)
+    获取数据：
+         mc.get('telphone')
+    删除数据：
+         mc.delete('email')
+    自增长：
+         mc.incr('read_count')  # 默认增加1
+         mc.incr('read_count', delta=10)  # 增加10
+    自减少：
+         mc.decr('read_count')  # 默认增加1
+         mc.decr('read_count', delta=10)  # 减少10
+         
+memcached的安全性：
+
+memcached的操作不需要任何用户名和密码，只需要知道memcached服务器的ip地址和端口号即可。因此memcached使用的时候尤其要注意他的安全性。
+    这里提供两种安全的解决方案。分别来进行讲解：
+    1.使用-l参数设置为只有本地可以连接：这种方式，就只能通过本机才能连接，别的机器都不能访问，可以达到最好的安全性。
+    2.使用防火墙，关闭11211端口，外面也不能访问。
+        ufw enable # 开启防火墙
+        ufw disable # 关闭防火墙
+        ufw default deny # 防火墙以禁止的方式打开，默认是关闭那些没有开启的端口
+        ufw deny 端口号 # 关闭某个端口
+        ufw allow 端口号 # 开启某个端口
