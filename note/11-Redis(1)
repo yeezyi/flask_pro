@@ -112,39 +112,62 @@ Hash操作:
             （2）AOF是在每秒或者每次写操作都进行备份，因此如果并发量比较大，效率可能有点慢。
             （3）AOF文件因为存储的是命令，因此在灾难恢复的时候Redis会重新运行AOF中的命令，速度不及RDB。
     更多:http://redisdoc.com/topic/persistence.html#redis
-其他常用操作
-delete(*names)
-    根据删除redis中的任意数据类型
+    
+安全：在配置文件(/etc/redis/redis.conf)中，将'requirepass'取消注释并设置，那么客户端连接的时候，需要使用密码：
+     > redis-cli -p 127.0.0.1 -p 6379
+     redis> set username xxx
+     (error) NOAUTH Authentication required.
+     redis> auth password
+     redis> set username xxx
+     OK
+     或使用密码登录：redis-cli -p 127.0.0.1 -p 6379 -a password
+ 
+其他机器连接本机reids:
+    修改配置文件(/etc/redis/redis.conf)文件中的'bind'， 添加ip地址为: bind 127.0.0.1 xxx.xxx.xxx.xxx(本机的ip地址)
+    注意xxx.xxx.xxx.xxx为本机的ip地址,非其他要连接redis的机器的ip地址
+    
+Python操作redis:
+    1.安装python-redis：
+        pip install redis
+    2.连接redis：
+         # 从redis包中导入Redis类
+         from redis import Redis
+         # 初始化redis实例变量
+         xtredis = Redis(host='192.168.174.130',port=6379)
+         
+    3.常用操作
+        delete(*names)
+            根据删除redis中的任意数据类型
 
-exists(name)
-    检测redis的name是否存在
+        exists(name)
+            检测redis的name是否存在
 
-keys(pattern='*')
-    根据模型获取redis的name,可以正则表达式
-    更多：
-      KEYS * 匹配数据库中所有 key 。
-      KEYS h?llo 匹配 hello ， hallo 和 hxllo 等。
-      KEYS h*llo 匹配 hllo 和 heeeeello 等。
-      KEYS h[ae]llo 匹配 hello 和 hallo ，但不匹配 hillo
+        keys(pattern='*')
+            根据模型获取redis的name,可以正则表达式
+            更多：
+              KEYS * 匹配数据库中所有 key 。
+              KEYS h?llo 匹配 hello ， hallo 和 hxllo 等。
+              KEYS h*llo 匹配 hllo 和 heeeeello 等。
+              KEYS h[ae]llo 匹配 hello 和 hallo ，但不匹配 hillo
 
-expire(name ,time)
-    为某个redis的某个name设置超时时间
+        expire(name ,time)
+            为某个redis的某个name设置超时时间
 
-rename(src, dst)
-    对redis的name重命名为
+        rename(src, dst)
+            对redis的name重命名为
 
-move(name, db)
-    将redis的某个值移动到指定的db下
+        move(name, db)
+            将redis的某个值移动到指定的db下
 
-randomkey()
-    随机获取一个redis的name（不删除）
+        randomkey()
+            随机获取一个redis的name（不删除）
 
-type(name)
-    获取name对应值的类型
+        type(name)
+            获取name对应值的类型
 
-scan(cursor=0, match=None, count=None)
-scan_iter(match=None, count=None)
-    同字符串操作，用于增量迭代获取key
+        scan(cursor=0, match=None, count=None)
+        scan_iter(match=None, count=None)
+            同字符串操作，用于增量迭代获取key
 ---------------------  String操作  ----------------------------
 String操作，redis中的String在在内存中按照一个name对应一个value来存储。
     n1   --->    v1
