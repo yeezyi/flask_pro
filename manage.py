@@ -19,6 +19,5 @@ def add_user(username, age):
     print('输入的用户为 %s, %s岁' % (username, age))
 
 
-
 if __name__ == '__main__':
     manager.run()
