@@ -134,6 +134,8 @@ Python操作redis:
          from redis import Redis
          # 初始化redis实例变量
          xtredis = Redis(host='192.168.174.130',port=6379)
+         # redis默认拿到的数据都时byte类型,之后需要解码
+         xtredis = Redis(host='192.168.174.130',port=6379, decode_responses=True)
          
     3.常用操作
         delete(*names)

@@ -170,3 +170,24 @@ g对象(global的简写):g对象时在整个Flask应用运行期间都是可以�
           def log_appcontext_tearing_down(sender,**kwargs):
               print 'coming...'
           appcontext_tearing_down.connect(log_appcontext_tearing_down,app)
+
+Flask-Mail(使用flask发邮件):
+    安装:
+        pip install Flask-Mail
+    使用:
+        1.绑定app:
+            from flask_mail import Mail
+            mail = Mail(app)
+            # 或: exts.py先初始化mail = Mail(), 再从主app初始化mail.init_app(app)
+        2.配置:
+            MAIL_SERVER  # 发送者邮箱的服务器地址
+            MAIL_PORT  # 发送者邮箱的服务器端口
+            MAIL_USE_TLS : default False
+            MAIL_USE_SSL : default False
+            MAIL_DEBUG : default app.debug
+            MAIL_USERNAME : # 用户名
+            MAIL_PASSWORD : # 授权码,到邮箱开通
+            MAIL_DEFAULT_SENDER : # 默认发送人
+            MAIL_MAX_EMAILS : default None
+            MAIL_SUPPRESS_SEND : default app.testing
+            MAIL_ASCII_ATTACHMENTS : default False
