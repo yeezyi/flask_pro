@@ -1,0 +1,58 @@
+pip install celery
+
+celery模型:
+                       celery
+            /       /         \       \
+           /       /           \       \
+          /        |           |        \
+      task任务-->broker中间人-->worker-->backend
+
+task:任务
+broker(中间人): 存储任务队列
+worker: 真正执行任务的工作者
+backend: 用来存储任务执行后的结果
+
+
+# app.conf.broker_url = 'redis://localhost:6379/0'
+# 格式为: redis://:password@hostname:port/db_number
+
+from celery import Celery
+import time
+
+# 1.创建Celery实例,main 为文件的名字
+celery111 = Celery(main="tasks", broker='redis://localhost:6379/0', backend='redis://localhost:6379/0')
+
+
+# 2. 创建任务(使用celery.tasks装饰器)
+@celery.task
+def send_mail():
+    print('sending...')
+    time.sleep(5)
+    print('over...')
+
+# 3.在要使用的地发调用send_mail(),一般使用send_mail.delay()作为异步任务
+
+# 4.指定worker, 进入文件目录,在终端执行 celery -A tasks.celery111 worker --loglevel=info
+# 或:celery -A tasks worker --loglevel=info  使用tasks下的全部celery
+
+
+flask中使用celery
+tasks.py
+from celery import Celery
+
+
+def make_celery(app):
+    celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+
+    class ContextTask(TaskBase):
+        abstract = True
+
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery

@@ -191,3 +191,5 @@ Flask-Mail(使用flask发邮件):
             MAIL_MAX_EMAILS : default None
             MAIL_SUPPRESS_SEND : default app.testing
             MAIL_ASCII_ATTACHMENTS : default False
+
+flask-paginate(jinja2分页)
