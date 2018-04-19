@@ -56,3 +56,11 @@ def make_celery(app):
 
     celery.Task = ContextTask
     return celery
+
+
+
+
+
+
+在Docker中运行crontab
+https://www.cnblogs.com/haoxi/p/8186901.html
